@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Доктор Александр Бек-Кирсанов - КПТ психотерапия онлайн</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Шапка */
+        .header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .badge {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Профиль доктора */
+        .doctor-section {
+            background: white;
+            margin: 16px;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .doctor-header {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .doctor-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .doctor-info {
+            flex: 1;
+        }
+
+        .doctor-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #1e293b;
+        }
+
+        .doctor-title {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .doctor-credentials {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .credential {
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* Статистика */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+            padding: 20px 0;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Специализация */
+        .specializations {
+            margin: 20px 0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e293b;
+        }
+
+        .spec-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .spec-item {
+            background: #ede9fe;
+            color: #5b21b6;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Методология */
+        .methodology {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .method-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .method-description {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Преимущества */
+        .benefits {
+            margin: 20px 0;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .benefit-icon {
+            width: 24px;
+            height: 24px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .benefit-icon::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .benefit-text {
+            font-size: 14px;
+            color: #475569;
+        }
+
+        /* CTA секция */
+        .cta-section {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 24px 16px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .cta-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .cta-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .cta-button {
+            background: white;
+            color: #6366f1;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 300px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .phone-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .free-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+            display: inline-block;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-button:hover {
+            background: #e2e8f0;
+        }
+
+        /* Лоадер */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loader.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Медиа запросы */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">GCBI</div>
+                <div class="badge">Верифицировано</div>
+            </div>
+        </header>
+
+        <section class="doctor-section">
+            <div class="doctor-header">
+                <img src="data:image/jpeg;base64,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" alt="Доктор Александр Бек-Кирсанов" class="doctor-photo">
+                <div class="doctor-info">
+                    <h1 class="doctor-name">Александр Бек-Кирсанов</h1>
+                    <p class="doctor-title">Клинический психолог, КПТ-терапевт</p>
+                    <div class="doctor-credentials">
+                        <span class="credential">PhD</span>
+                        <span class="credential">ABPP</span>
+                        <span class="credential">CBE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">25+</div>
+                    <div class="stat-label">лет опыта</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">12K+</div>
+                    <div class="stat-label">клиентов</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">72%</div>
+                    <div class="stat-label">эффективность</div>
+                </div>
+            </div>
+
+            <div class="specializations">
+                <h2 class="section-title">Специализация</h2>
+                <div class="spec-list">
+                    <span class="spec-item">Тревожные расстройства</span>
+                    <span class="spec-item">Депрессия</span>
+                    <span class="spec-item">ПТСР</span>
+                    <span class="spec-item">ОКР</span>
+                    <span class="spec-item">Панические атаки</span>
+                    <span class="spec-item">Финансовый стресс</span>
+                </div>
+            </div>
+
+            <div class="methodology">
+                <h3 class="method-title">Авторская методика IC-CBT</h3>
+                <p class="method-description">
+                    Интегративная модель, объединяющая классическую КПТ, ACT, DBT и mindfulness для достижения максимальных результатов за 6-8 недель.
+                </p>
+            </div>
+
+            <div class="benefits">
+                <h2 class="section-title">Почему выбирают доктора Бек-Кирсанова</h2>
+                <div class="benefit-item">
+                    <div class="benefit-icon"></div>
+                    <div class="benefit-text">Международное образование (Торонто, Пенсильвания, Оксфорд)</div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon"></div>
+                    <div class="benefit-text">Автор 12 книг и 320+ научных публикаций</div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon"></div>
+                    <div class="benefit-text">Президент сети клиник GCBI-Россия</div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon"></div>
+                    <div class="benefit-text">Измеримые результаты с первой сессии</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <h2 class="cta-title">Начните путь к лучшей жизни</h2>
+            <p class="cta-subtitle">Первая консультация 15 минут</p>
+            <button class="cta-button" id="startConsultation">
+                <svg class="phone-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                </svg>
+                Позвонить доктору
+            </button>
+            <div class="free-badge">БЕСПЛАТНО</div>
+        </section>
+    </div>
+
+    <!-- Модальное окно -->
+    <div class="modal" id="consultationModal">
+        <div class="modal-content">
+            <button class="close-button" id="closeModal">✕</button>
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+                <p>Подключение к доктору...</p>
+            </div>
+            <div id="conversationContent" style="display: none;">
+                <h3 style="margin-bottom: 16px;">Консультация началась</h3>
+                <p style="color: #64748b; font-size: 14px;">Доктор вас слушает. Расскажите, что вас беспокоит.</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { Conversation } from 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@latest/+esm';
+
+        const AGENT_ID = 'agent_01jwxapgd8es0v7z6gtfvwb45x';
+        
+        let conversation = null;
+        let isConnected = false;
+
+        const startButton = document.getElementById('startConsultation');
+        const modal = document.getElementById('consultationModal');
+        const closeModal = document.getElementById('closeModal');
+        const loader = document.getElementById('loader');
+        const conversationContent = document.getElementById('conversationContent');
+
+        // Открыть модальное окно и начать консультацию
+        async function startConsultation() {
+            modal.classList.add('active');
+            loader.classList.add('active');
+            conversationContent.style.display = 'none';
+
+            try {
+                // Запрашиваем разрешение на микрофон
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Создаем сессию с агентом
+                conversation = await Conversation.startSession({
+                    agentId: AGENT_ID,
+                    onConnect: () => {
+                        console.log('Подключено к доктору');
+                        isConnected = true;
+                        loader.classList.remove('active');
+                        conversationContent.style.display = 'block';
+                    },
+                    onDisconnect: () => {
+                        console.log('Отключено');
+                        isConnected = false;
+                        endConsultation();
+                    },
+                    onMessage: (message) => {
+                        console.log('Сообщение:', message);
+                    },
+                    onError: (error) => {
+                        console.error('Ошибка:', error);
+                        alert('Не удалось подключиться. Пожалуйста, проверьте микрофон и попробуйте снова.');
+                        endConsultation();
+                    },
+                    onStatusChange: (status) => {
+                        console.log('Статус:', status);
+                    },
+                    onModeChange: (mode) => {
+                        console.log('Режим:', mode);
+                    }
+                });
+
+                // Настройка громкости
+                conversation.setVolume({ volume: 0.8 });
+
+            } catch (error) {
+                console.error('Ошибка при начале консультации:', error);
+                alert('Для консультации необходим доступ к микрофону');
+                endConsultation();
+            }
+        }
+
+        // Завершить консультацию
+        function endConsultation() {
+            if (conversation) {
+                conversation.endSession();
+                conversation = null;
+            }
+            isConnected = false;
+            modal.classList.remove('active');
+        }
+
+        // Обработчики событий
+        startButton.addEventListener('click', startConsultation);
+        closeModal.addEventListener('click', endConsultation);
+
+        // Закрытие при клике вне модального окна
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                endConsultation();
+            }
+        });
+
+        // Обработка закрытия страницы
+        window.addEventListener('beforeunload', () => {
+            if (conversation) {
+                conversation.endSession();
+            }
+        });
+    </script>
+</body>
+</html>
