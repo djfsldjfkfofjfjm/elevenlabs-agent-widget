@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Автоматический звонок агенту</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .logo.active {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(102, 126, 234, 0.8);
+            }
+        }
+
+        .phone-icon {
+            width: 60px;
+            height: 60px;
+            color: white;
+        }
+
+        .status {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.7;
+            margin-bottom: 40px;
+        }
+
+        .wave-container {
+            height: 80px;
+            margin: 30px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .wave {
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .wave:nth-child(1) { animation-delay: 0s; }
+        .wave:nth-child(2) { animation-delay: 0.1s; }
+        .wave:nth-child(3) { animation-delay: 0.2s; }
+        .wave:nth-child(4) { animation-delay: 0.3s; }
+        .wave:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% {
+                height: 20px;
+            }
+            50% {
+                height: 40px;
+            }
+        }
+
+        .end-button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .end-button.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .end-button:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .permission-prompt {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .permission-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .permission-button:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.visible {
+            display: block;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+            100% { content: ''; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo" id="logo">
+            <svg class="phone-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+            </svg>
+        </div>
+
+        <div id="permissionPrompt" class="permission-prompt">
+            <h2 class="status">Добро пожаловать!</h2>
+            <p class="subtitle">Для начала разговора с агентом необходим доступ к микрофону</p>
+            <button class="permission-button" id="startButton">Начать разговор</button>
+        </div>
+
+        <div id="activeCall" style="display: none;">
+            <h2 class="status" id="status">Подключение<span class="loading-dots"></span></h2>
+            <p class="subtitle" id="subtitle">Пожалуйста, подождите</p>
+            
+            <div class="wave-container" id="waveContainer">
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+
+            <button class="end-button" id="endButton">Завершить разговор</button>
+        </div>
+
+        <div class="error" id="error"></div>
+    </div>
+
+    <script type="module">
+        import { Conversation } from 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@latest/+esm';
+
+        // Конфигурация
+        const AGENT_ID = 'agent_01jwxapgd8es0v7z6gtfvwb45x'; // ID вашего агента
+        const AUTO_START = true; // Автоматически начинать после разрешения микрофона
+        
+        let conversation = null;
+        let isConnected = false;
+
+        const logo = document.getElementById('logo');
+        const permissionPrompt = document.getElementById('permissionPrompt');
+        const activeCall = document.getElementById('activeCall');
+        const startButton = document.getElementById('startButton');
+        const endButton = document.getElementById('endButton');
+        const status = document.getElementById('status');
+        const subtitle = document.getElementById('subtitle');
+        const waveContainer = document.getElementById('waveContainer');
+        const errorDiv = document.getElementById('error');
+
+        // Показать ошибку
+        function showError(text) {
+            errorDiv.textContent = text;
+            errorDiv.classList.add('visible');
+            setTimeout(() => {
+                errorDiv.classList.remove('visible');
+            }, 5000);
+        }
+
+        // Обновить UI для активного звонка
+        function showActiveCall() {
+            permissionPrompt.style.display = 'none';
+            activeCall.style.display = 'block';
+            logo.classList.add('active');
+            setTimeout(() => {
+                endButton.classList.add('visible');
+            }, 1000);
+        }
+
+        // Обновить UI для завершенного звонка
+        function showEndedCall() {
+            logo.classList.remove('active');
+            status.textContent = 'Разговор завершен';
+            subtitle.textContent = 'Спасибо за использование нашего сервиса';
+            waveContainer.style.display = 'none';
+            endButton.classList.remove('visible');
+            
+            setTimeout(() => {
+                activeCall.style.display = 'none';
+                permissionPrompt.style.display = 'block';
+            }, 3000);
+        }
+
+        // Начать разговор
+        async function startConversation() {
+            if (!AGENT_ID || AGENT_ID === 'YOUR_AGENT_ID') {
+                showError('Пожалуйста, укажите ID агента в коде');
+                return;
+            }
+
+            try {
+                showActiveCall();
+                status.innerHTML = 'Подключение<span class="loading-dots"></span>';
+                subtitle.textContent = 'Пожалуйста, подождите';
+
+                // Создаем сессию с агентом
+                conversation = await Conversation.startSession({
+                    agentId: AGENT_ID,
+                    onConnect: () => {
+                        console.log('Подключено к агенту');
+                        isConnected = true;
+                        status.textContent = 'Вы на связи';
+                        subtitle.textContent = 'Говорите - агент вас слушает';
+                        waveContainer.style.display = 'flex';
+                    },
+                    onDisconnect: () => {
+                        console.log('Отключено от агента');
+                        isConnected = false;
+                        endConversation();
+                    },
+                    onMessage: (message) => {
+                        console.log('Сообщение:', message);
+                    },
+                    onError: (error) => {
+                        console.error('Ошибка:', error);
+                        showError(`Ошибка: ${error.message || 'Неизвестная ошибка'}`);
+                        endConversation();
+                    },
+                    onStatusChange: (status) => {
+                        console.log('Изменение статуса:', status);
+                    },
+                    onModeChange: (mode) => {
+                        console.log('Изменение режима:', mode);
+                        
+                        if (mode === 'speaking') {
+                            subtitle.textContent = 'Агент говорит...';
+                        } else if (mode === 'listening') {
+                            subtitle.textContent = 'Говорите - агент вас слушает';
+                        }
+                    }
+                });
+
+                // Установка громкости
+                conversation.setVolume({ volume: 0.8 });
+
+            } catch (error) {
+                console.error('Ошибка при начале разговора:', error);
+                
+                if (error.message && error.message.includes('microphone')) {
+                    showError('Необходим доступ к микрофону для работы');
+                } else {
+                    showError(`Не удалось начать разговор: ${error.message || 'Неизвестная ошибка'}`);
+                }
+                
+                showEndedCall();
+            }
+        }
+
+        // Завершить разговор
+        function endConversation() {
+            if (conversation) {
+                conversation.endSession();
+                conversation = null;
+            }
+
+            isConnected = false;
+            showEndedCall();
+        }
+
+        // Запросить разрешение на микрофон и начать
+        async function requestPermissionAndStart() {
+            try {
+                // Запрашиваем разрешение на микрофон
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Если AUTO_START включен, сразу начинаем разговор
+                if (AUTO_START) {
+                    await startConversation();
+                }
+            } catch (error) {
+                console.error('Ошибка доступа к микрофону:', error);
+                showError('Для работы сервиса необходим доступ к микрофону');
+            }
+        }
+
+        // Обработчики событий
+        startButton.addEventListener('click', requestPermissionAndStart);
+        endButton.addEventListener('click', endConversation);
+
+        // Обработка закрытия страницы
+        window.addEventListener('beforeunload', () => {
+            if (conversation) {
+                conversation.endSession();
+            }
+        });
+
+        // Проверка поддержки getUserMedia
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showError('Ваш браузер не поддерживает работу с микрофоном');
+            startButton.disabled = true;
+        }
+    </script>
+</body>
+</html>

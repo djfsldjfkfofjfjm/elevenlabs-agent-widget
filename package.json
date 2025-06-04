@@ -1,0 +1,23 @@
+{
+  "name": "elevenlabs-agent-widget",
+  "version": "1.0.0",
+  "description": "Минималистичный виджет для интеграции голосового агента ElevenLabs",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "deploy": "vercel"
+  },
+  "keywords": [
+    "elevenlabs",
+    "voice",
+    "ai",
+    "agent",
+    "widget"
+  ],
+  "author": "Vitalij Travin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/djfsldjfkfofjfjm/elevenlabs-agent-widget.git"
+  }
+}

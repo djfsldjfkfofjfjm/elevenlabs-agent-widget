@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Звонок агенту</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+        }
+
+        .call-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: #fff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .call-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .call-button:active {
+            transform: scale(0.98);
+        }
+
+        .call-button.calling {
+            animation: pulse 1.5s infinite;
+            background: #4CAF50;
+        }
+
+        .call-button.calling .phone-icon {
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 30px rgba(76, 175, 80, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
+        }
+
+        .phone-icon {
+            width: 80px;
+            height: 80px;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .status {
+            margin-top: 30px;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .status.visible {
+            opacity: 1;
+        }
+
+        .visualizer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .visualizer.active {
+            opacity: 1;
+        }
+
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: wave 3s linear infinite;
+        }
+
+        .wave:nth-child(2) {
+            animation-delay: 1s;
+        }
+
+        .wave:nth-child(3) {
+            animation-delay: 2s;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .error-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f44336;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .error-message.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="visualizer" id="visualizer">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+        
+        <button class="call-button" id="callButton">
+            <svg class="phone-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+            </svg>
+        </button>
+        
+        <div class="status" id="status">Нажмите для звонка</div>
+    </div>
+
+    <div class="error-message" id="errorMessage"></div>
+
+    <script>
+        // Конфигурация
+        const AGENT_ID = 'agent_01jwxapgd8es0v7z6gtfvwb45x'; // ID вашего агента
+        const API_KEY = ''; // Оставьте пустым для публичных агентов
+        
+        let ws = null;
+        let mediaRecorder = null;
+        let audioContext = null;
+        let audioStream = null;
+        let isConnected = false;
+        let audioQueue = [];
+        let isPlaying = false;
+
+        const callButton = document.getElementById('callButton');
+        const status = document.getElementById('status');
+        const visualizer = document.getElementById('visualizer');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Показать статус
+        function showStatus(text) {
+            status.textContent = text;
+            status.classList.add('visible');
+        }
+
+        // Показать ошибку
+        function showError(text) {
+            errorMessage.textContent = text;
+            errorMessage.classList.add('visible');
+            setTimeout(() => {
+                errorMessage.classList.remove('visible');
+            }, 5000);
+        }
+
+        // Инициализация аудио контекста
+        function initAudioContext() {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000
+            });
+        }
+
+        // Конвертация Float32Array в base64
+        function floatTo16BitPCM(float32Array) {
+            const buffer = new ArrayBuffer(float32Array.length * 2);
+            const view = new DataView(buffer);
+            let offset = 0;
+            for (let i = 0; i < float32Array.length; i++, offset += 2) {
+                const s = Math.max(-1, Math.min(1, float32Array[i]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            }
+            return buffer;
+        }
+
+        // Конвертация ArrayBuffer в base64
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        // Воспроизведение аудио
+        async function playAudioChunk(base64Audio) {
+            if (!audioContext) return;
+
+            try {
+                // Декодирование base64
+                const binaryString = atob(base64Audio);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // Создание аудио буфера (PCM 16000 Hz)
+                const audioBuffer = audioContext.createBuffer(1, bytes.length / 2, 16000);
+                const channelData = audioBuffer.getChannelData(0);
+                
+                // Конвертация 16-bit PCM в float32
+                const dataView = new DataView(bytes.buffer);
+                for (let i = 0; i < channelData.length; i++) {
+                    const sample = dataView.getInt16(i * 2, true);
+                    channelData[i] = sample / 32768;
+                }
+
+                // Воспроизведение
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                source.start();
+
+                // Ждем окончания воспроизведения
+                await new Promise(resolve => {
+                    source.onended = resolve;
+                });
+            } catch (error) {
+                console.error('Ошибка воспроизведения аудио:', error);
+            }
+        }
+
+        // Обработка очереди аудио
+        async function processAudioQueue() {
+            if (isPlaying || audioQueue.length === 0) return;
+            
+            isPlaying = true;
+            while (audioQueue.length > 0) {
+                const audioData = audioQueue.shift();
+                await playAudioChunk(audioData);
+            }
+            isPlaying = false;
+        }
+
+        // Начать запись с микрофона
+        async function startRecording() {
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        sampleRate: 16000,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+
+                // Создаем аудио процессор
+                const source = audioContext.createMediaStreamSource(audioStream);
+                const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+
+                processor.onaudioprocess = (e) => {
+                    if (!isConnected) return;
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    const pcmData = floatTo16BitPCM(inputData);
+                    const base64Data = arrayBufferToBase64(pcmData);
+
+                    // Отправляем аудио в WebSocket
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            user_audio_chunk: base64Data
+                        }));
+                    }
+                };
+
+                visualizer.classList.add('active');
+                showStatus('Говорите...');
+            } catch (error) {
+                console.error('Ошибка доступа к микрофону:', error);
+                showError('Не удалось получить доступ к микрофону');
+                endCall();
+            }
+        }
+
+        // Подключиться к агенту
+        async function connectToAgent() {
+            if (!AGENT_ID || AGENT_ID === 'YOUR_AGENT_ID') {
+                showError('Пожалуйста, укажите ID агента в коде');
+                return;
+            }
+
+            try {
+                // Инициализация аудио
+                initAudioContext();
+
+                // Подключение к WebSocket
+                const wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${AGENT_ID}`;
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = async () => {
+                    console.log('WebSocket подключен');
+                    isConnected = true;
+
+                    // Отправляем инициализационное сообщение если нужно
+                    if (API_KEY) {
+                        ws.send(JSON.stringify({
+                            type: 'conversation_initiation_client_data',
+                            xi_api_key: API_KEY
+                        }));
+                    }
+
+                    // Начинаем запись
+                    await startRecording();
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    
+                    switch(data.type) {
+                        case 'conversation_initiation_metadata':
+                            console.log('Разговор начат:', data);
+                            break;
+                        
+                        case 'audio':
+                            if (data.audio_event && data.audio_event.audio_base_64) {
+                                audioQueue.push(data.audio_event.audio_base_64);
+                                processAudioQueue();
+                            }
+                            break;
+                        
+                        case 'user_transcript':
+                            if (data.user_transcription_event) {
+                                console.log('Вы сказали:', data.user_transcription_event.user_transcript);
+                            }
+                            break;
+                        
+                        case 'agent_response':
+                            if (data.agent_response_event) {
+                                console.log('Агент ответил:', data.agent_response_event.agent_response);
+                            }
+                            break;
+                        
+                        case 'interruption':
+                            console.log('Прерывание разговора');
+                            audioQueue = []; // Очищаем очередь аудио
+                            break;
+
+                        case 'ping':
+                            // Отвечаем на ping для поддержания соединения
+                            ws.send(JSON.stringify({ type: 'pong' }));
+                            break;
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('Ошибка WebSocket:', error);
+                    showError('Ошибка соединения');
+                    endCall();
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket отключен');
+                    isConnected = false;
+                    endCall();
+                };
+
+            } catch (error) {
+                console.error('Ошибка подключения:', error);
+                showError('Не удалось подключиться к агенту');
+                endCall();
+            }
+        }
+
+        // Завершить звонок
+        function endCall() {
+            // Остановка записи
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+
+            // Закрытие WebSocket
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+
+            // Сброс состояния
+            isConnected = false;
+            audioQueue = [];
+            isPlaying = false;
+
+            // Обновление UI
+            callButton.classList.remove('calling');
+            visualizer.classList.remove('active');
+            showStatus('Звонок завершен');
+            
+            setTimeout(() => {
+                status.classList.remove('visible');
+            }, 3000);
+        }
+
+        // Обработчик клика на кнопку
+        callButton.addEventListener('click', async () => {
+            if (isConnected) {
+                endCall();
+            } else {
+                callButton.classList.add('calling');
+                showStatus('Подключение...');
+                await connectToAgent();
+            }
+        });
+
+        // Показать начальный статус
+        setTimeout(() => {
+            showStatus('Нажмите для звонка');
+        }, 500);
+    </script>
+</body>
+</html>
